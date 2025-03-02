@@ -4,13 +4,19 @@ import {
   IonIcon,
   IonLabel,
   IonRouterOutlet,
-  IonTabBar,
-  IonTabButton,
-  IonTabs,
+  IonMenu,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonList,
+  IonItem,
+  IonSplitPane,
+  IonButton,
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { list } from 'ionicons/icons';
+import { list, chevronBack, chevronForward } from 'ionicons/icons';
 import Tab1 from './pages/Tab1';
 import Login from './pages/Login';
 import PrivateRoute from './components/PrivateRoute';
@@ -36,32 +42,59 @@ import './theme/variables.css';
 
 /* Custom styles for the menu */
 import './theme/menu.css';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <Route exact path="/login" component={Login} />
-      <Route exact path="/">
-        <Redirect to="/login" />
-      </Route>
-      
-      <IonTabs>
-        <IonRouterOutlet>
-          <PrivateRoute exact path="/tab1" component={Tab1} />
-        </IonRouterOutlet>
+const App: React.FC = () => {
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="tab1" href="/tab1">
-            <IonIcon icon={list} />
-            <IonLabel>Checklists</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
-    </IonReactRouter>
-  </IonApp>
-);
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <Route exact path="/login" component={Login} />
+        <Route exact path="/">
+          <Redirect to="/login" />
+        </Route>
+        
+        <IonSplitPane contentId="main" when="md">
+          <IonMenu contentId="main" disabled={isMenuCollapsed}>
+            <IonHeader>
+              <IonToolbar>
+                <IonTitle>{!isMenuCollapsed && 'Lists'}</IonTitle>
+                <IonButton
+                  slot="end"
+                  fill="clear"
+                  onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+                  aria-label={isMenuCollapsed ? 'Expand menu' : 'Collapse menu'}
+                >
+                  <IonIcon icon={isMenuCollapsed ? chevronForward : chevronBack} />
+                </IonButton>
+              </IonToolbar>
+            </IonHeader>
+            <IonContent>
+              <IonList id="checklist-list"></IonList>
+            </IonContent>
+          </IonMenu>
+
+          {isMenuCollapsed && (
+            <IonButton
+              fill="clear"
+              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+              style={{ '--max-width': '10px' }}
+              aria-label={isMenuCollapsed ? 'Expand menu' : 'Collapse menu'}
+            >
+              <IonIcon icon={isMenuCollapsed ? chevronForward : chevronBack} />
+            </IonButton>
+          )}
+
+          <IonRouterOutlet id="main">
+            <PrivateRoute exact path="/tab1" component={Tab1} />
+          </IonRouterOutlet>
+        </IonSplitPane>
+      </IonReactRouter>
+    </IonApp>
+  );
+};
 
 export default App;

@@ -1,8 +1,27 @@
 /* Adjust the width of the menu and split pane */
 ion-menu {
-    width: 100px;
-} 
+    --width: 300px;
+    --min-width: 50px;
+}
 
+ion-menu.collapsed {
+    --width: 50px;
+}
+
+.menu-toggle-button {
+    margin: 0;
+    padding: 0;
+    --padding-start: 4px;
+    --padding-end: 4px;
+}
+
+ion-menu ion-toolbar {
+    --min-height: 48px;
+}
+
+ion-menu.collapsed ion-title {
+    display: none;
+}
 
 /* Optional: Add some styling to make it look more like ChatGPT's sidebar */
 ion-menu ion-content {

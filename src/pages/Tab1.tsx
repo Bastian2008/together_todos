@@ -16,15 +16,25 @@ import {
   IonItemOption,
   IonFab,
   IonFabButton,
-  IonAlert
+  IonAlert,
+  IonTextarea,
+  IonModal,
+  IonButtons,
+  IonImg,
+  IonActionSheet,
+  IonBackButton
 } from '@ionic/react';
-import { add, trash } from 'ionicons/icons';
-import { useState } from 'react';
+import { add, trash, camera, image, chatbubble } from 'ionicons/icons';
+import { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
+import { Camera, CameraResultType } from '@capacitor/camera';
 import './Tab1.css';
 
 interface ChecklistItem {
   text: string;
   checked: boolean;
+  comment?: string;
+  photo?: string;
 }
 
 interface Checklist {
@@ -37,7 +47,13 @@ const Tab1: React.FC = () => {
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [showNewChecklistAlert, setShowNewChecklistAlert] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<number | null>(null);
   const [newItem, setNewItem] = useState('');
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [itemComment, setItemComment] = useState('');
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   const createChecklist = (name: string) => {
     const newChecklist: Checklist = {
@@ -64,11 +80,15 @@ const Tab1: React.FC = () => {
     }
   };
 
-  const toggleItem = (checklistId: string, itemIndex: number) => {
+  const toggleItem = async (checklistId: string, itemIndex: number) => {
     setChecklists(checklists.map(list => {
       if (list.id === checklistId) {
         const newItems = [...list.items];
         newItems[itemIndex].checked = !newItems[itemIndex].checked;
+        if (newItems[itemIndex].checked) {
+          setSelectedItem(itemIndex);
+          setShowActionSheet(true);
+        }
         return { ...list, items: newItems };
       }
       return list;
@@ -94,15 +114,60 @@ const Tab1: React.FC = () => {
     }
   };
 
-  return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Checklists</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent>
-        {/* Checklist Selection */}
+  const saveComment = () => {
+    if (selectedChecklist && selectedItem !== null) {
+      setChecklists(checklists.map(list => {
+        if (list.id === selectedChecklist) {
+          const newItems = [...list.items];
+          newItems[selectedItem] = {
+            ...newItems[selectedItem],
+            comment: itemComment
+          };
+          return { ...list, items: newItems };
+        }
+        return list;
+      }));
+      setShowItemModal(false);
+    }
+  };
+
+  const takePicture = async () => {
+    try {
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl
+      });
+
+      if (selectedChecklist && selectedItem !== null) {
+        setChecklists(checklists.map(list => {
+          if (list.id === selectedChecklist) {
+            const newItems = [...list.items];
+            newItems[selectedItem] = {
+              ...newItems[selectedItem],
+              photo: image.dataUrl
+            };
+            return { ...list, items: newItems };
+          }
+          return list;
+        }));
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+    }
+    setShowActionSheet(false);
+  };
+
+  const handlePhotoClick = (e: Event, photoUrl: string) => {
+    e.stopPropagation();
+    setSelectedPhoto(photoUrl);
+    setShowPhotoModal(true);
+  };
+
+  useEffect(() => {
+    const listElement = document.getElementById('checklist-list');
+    if (listElement) {
+      ReactDOM.render(
         <IonList>
           {checklists.map(list => (
             <IonItemSliding key={list.id}>
@@ -120,9 +185,22 @@ const Tab1: React.FC = () => {
               </IonItemOptions>
             </IonItemSliding>
           ))}
-        </IonList>
+        </IonList>,
+        listElement
+      );
+    }
+  }, [checklists, selectedChecklist]);
 
-        {/* Selected Checklist Items */}
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>
+            {checklists.find(list => list.id === selectedChecklist)?.name || 'Select a List'}
+          </IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
         {selectedChecklist && (
           <div className="checklist-content">
             <div className="add-item-container">
@@ -156,8 +234,29 @@ const Tab1: React.FC = () => {
                         onIonChange={() => toggleItem(selectedChecklist, index)}
                       />
                       <IonLabel className={item.checked ? 'checked-item' : ''}>
-                        {item.text}
+                        <h2>{item.text}</h2>
+                        {item.comment && (
+                          <p className="item-comment">
+                            <IonIcon icon={chatbubble} /> {item.comment}
+                          </p>
+                        )}
                       </IonLabel>
+                      {item.photo && (
+                        <div 
+                          className="photo-container"
+                          onClick={(e: any) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handlePhotoClick(e, item.photo!);
+                          }}
+                        >
+                          <img 
+                            src={item.photo} 
+                            className="item-photo"
+                            alt="Item"
+                          />
+                        </div>
+                      )}
                     </IonItem>
                     <IonItemOptions side="end">
                       <IonItemOption color="danger" onClick={() => deleteItem(selectedChecklist, index)}>
@@ -170,14 +269,12 @@ const Tab1: React.FC = () => {
           </div>
         )}
 
-        {/* FAB Button for new checklist */}
         <IonFab vertical="bottom" horizontal="end" slot="fixed">
           <IonFabButton onClick={() => setShowNewChecklistAlert(true)}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
 
-        {/* New Checklist Alert */}
         <IonAlert
           isOpen={showNewChecklistAlert}
           onDidDismiss={() => setShowNewChecklistAlert(false)}
@@ -204,6 +301,80 @@ const Tab1: React.FC = () => {
             }
           ]}
         />
+
+        <IonActionSheet
+          isOpen={showActionSheet}
+          onDidDismiss={() => setShowActionSheet(false)}
+          buttons={[
+            {
+              text: 'Add Comment',
+              icon: chatbubble,
+              handler: () => {
+                setShowItemModal(true);
+                setShowActionSheet(false);
+              }
+            },
+            {
+              text: 'Take Photo',
+              icon: camera,
+              handler: () => takePicture()
+            },
+            {
+              text: 'Cancel',
+              role: 'cancel'
+            }
+          ]}
+        />
+
+        <IonModal isOpen={showItemModal} onDidDismiss={() => setShowItemModal(false)}>
+          <IonHeader>
+            <IonToolbar>
+              <IonTitle>Add Comment</IonTitle>
+              <IonButtons slot="end">
+                <IonButton onClick={() => setShowItemModal(false)}>Cancel</IonButton>
+                <IonButton strong={true} onClick={saveComment}>Save</IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent>
+            <div className="ion-padding">
+              <IonTextarea
+                placeholder="Enter your comment here..."
+                value={itemComment}
+                onIonChange={e => setItemComment(e.detail.value!)}
+                rows={6}
+                className="comment-textarea"
+              />
+            </div>
+          </IonContent>
+        </IonModal>
+
+        <IonModal 
+          isOpen={showPhotoModal} 
+          onDidDismiss={() => setShowPhotoModal(false)}
+          className="photo-modal"
+        >
+          <IonHeader>
+            <IonToolbar>
+              <IonButtons slot="start">
+                <IonButton onClick={() => setShowPhotoModal(false)}>
+                  Close
+                </IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent className="ion-padding">
+            {selectedPhoto && (
+              <div className="expanded-photo-container">
+                <img 
+                  src={selectedPhoto} 
+                  alt="Expanded view" 
+                  className="expanded-photo"
+                />
+              </div>
+            )}
+          </IonContent>
+        </IonModal>
       </IonContent>
     </IonPage>
   );
