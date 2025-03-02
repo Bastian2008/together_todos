@@ -1,0 +1,31 @@
+.add-item-container {
+  padding: 16px;
+}
+
+.checked-item {
+  text-decoration: line-through;
+  color: var(--ion-color-medium);
+}
+
+ion-item {
+  --padding-start: 8px;
+  --inner-padding-end: 8px;
+}
+
+ion-checkbox {
+  margin-right: 16px;
+}
+
+ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+.selected-checklist {
+  --background: var(--ion-color-light);
+  font-weight: bold;
+}
+
+.checklist-content {
+  margin-top: 16px;
+}

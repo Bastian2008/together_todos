@@ -1,0 +1,78 @@
+.login-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-color-light);
+}
+
+ion-card {
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+ion-card-header {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+ion-card-title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.input-container {
+  margin-bottom: 20px;
+}
+
+.input-container ion-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  margin-top: 4px;
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--ion-color-primary-rgb), 0.2);
+}
+
+ion-button {
+  margin-top: 24px;
+  --border-radius: 8px;
+}
+
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 16px;
+}
+
+.ion-input-clickable {
+  --padding-start: 8px;
+  cursor: text;
+  background: var(--ion-color-light);
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+ion-input {
+  --background: var(--ion-color-light-shade);
+  --padding-start: 10px;
+  --padding-end: 10px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  border-radius: 4px;
+  margin-top: 6px;
+} 
